@@ -58,3 +58,27 @@ machines/usernames. Override the target dir with `CLAUDE_DIR=/path ./install.sh`
   session (run `/maestro` from an Opus session for best coordination).
 - **sonnet** — dev-*, review-tl, task-reviewer, qa-verifier, docs-reviewer.
 - **haiku** — built-in Explore (scouting).
+
+## maestro vs `/goal` (when to use which)
+
+Claude Code's built-in `/goal <condition>` keeps Claude working across turns until a self-judged condition
+is met (no native spend cap). maestro and `/goal` serve the same instinct — "keep going until done" — but
+maestro is the disciplined version:
+
+| | `/goal` (raw) | maestro |
+|---|---|---|
+| Termination | self-judged condition | external gates (qa/tests, 2-stage reviews, CTO gate) |
+| Loop safety | none native | bounded (3 runs/gate → HALT + `*-UNRESOLVED.md`) |
+| Spend | no cap | tiered models + bounded loops + conditional reviews |
+| Human checkpoints | none | spec approval + completion menu |
+
+- **Use maestro** for building/changing a feature (multi-step: spec → plan → impl → review).
+- **Use `/goal`** for a single mechanical objective with a *verifiable* finish line **and a hard cap**, e.g.
+  `/goal fix every failing test (npm test); stop after 10 attempts`. Avoid vague self-judged goals
+  ("loop until 100% confident", "improve quality") — they run away or declare false success.
+- **Don't wrap maestro in `/goal`.** maestro is already a continuous autonomous run; `/goal` adds nothing
+  and removes maestro's bounding (its no-spend-cap over the opus pipeline is how a stall becomes a big bill).
+
+Note: the `permissions.deny` + guard hook this installs are global, so they also protect any standalone
+`/goal` run (no `git push` / `rm -rf` / `reset --hard`).
+
